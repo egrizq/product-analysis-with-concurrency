@@ -3,48 +3,36 @@ package service
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"product-store-management/database"
+	"product-store-management/helpers"
 	"product-store-management/model"
 )
 
-func ImportProductToDatabase() (model.Response, error) {
-	fileJson, err := os.ReadFile("product.json")
+func ImportProductToDatabase() model.Response {
+	fileJson, err := os.ReadFile("/data/product.json")
 	if err != nil {
-		log.Printf("Error open JSON file: %v", err)
-		return model.Response{}, err
+		return helpers.Response("Error open JSON file", 500, err.Error())
 	}
 
 	var listProduct []model.Product
 
 	err = json.Unmarshal(fileJson, &listProduct)
 	if err != nil {
-		log.Printf("Error unmarshal JSON data: %v", err)
-		return model.Response{}, err
+		return helpers.Response("Error unmarshal JSON data", 500, err.Error())
 	}
 
 	for _, product := range listProduct {
-		newProduct := model.Product{
-			Name:         product.Name,
-			Stock:        product.Stock,
-			SellingPrice: product.SellingPrice,
-			BuyingPrice:  product.BuyingPrice,
-		}
+		query := `INSERT INTO products(name, stock, selling_price, buying_price) VALUES (?, ?, ?, ?)`
 
-		err := database.DB.Create(&newProduct).Error
+		err := database.DB.Exec(query, product.Name, product.Stock, product.SellingPrice, product.BuyingPrice).Error
 		if err != nil {
-			log.Printf("Error insert product to database: %v", err)
-			return model.Response{}, err
+			return helpers.Response("Error insert product to database", 500, err.Error())
 		}
 	}
 
 	payload := fmt.Sprintf("Success insert %v rows of data", len(listProduct))
-	Response := model.Response{
-		Payload:    payload,
-		StatusCode: 200,
-		Message:    "Import json data to database is success",
-	}
+	response := helpers.Response(payload, 200, "Import json data to database is success")
 
-	return Response, nil
+	return response
 }

@@ -5,10 +5,13 @@ import (
 	"product-store-management/database"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
+var Database *gorm.DB
+
 func main() {
-	database.ConnectionDB()
+	database.Connection()
 
 	router := gin.Default()
 

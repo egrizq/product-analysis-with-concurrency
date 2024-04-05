@@ -13,7 +13,7 @@ import (
 
 var DB *gorm.DB
 
-func ConnectionDB() {
+func InitializationDB() *gorm.DB {
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
@@ -28,12 +28,17 @@ func ConnectionDB() {
 	config := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=disable",
 		host, port, user, database, password)
 
-	db, err := gorm.Open(postgres.Open(config), &gorm.Config{})
+	connect, err := gorm.Open(postgres.Open(config), &gorm.Config{})
 	if err != nil {
-		log.Printf("Error connecting to database: %s", err)
-		return
+		log.Fatalf("Error connecting to database: %s", err)
 	}
-	db.AutoMigrate(&model.Product{})
 
-	DB = db
+	return connect
+}
+
+func Connection() {
+	DB = InitializationDB()
+	if err := DB.AutoMigrate(&model.Product{}); err != nil {
+		log.Fatalf("Error migrating database schema: %v", err)
+	}
 }
