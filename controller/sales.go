@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func InsertProductJSON(ctx *gin.Context) {
-	response := service.ImportProductToDatabase()
+func InsertCSVFile(ctx *gin.Context) {
+	response := service.ImportSalesToDatabase()
 	ctx.JSON(response.StatusCode, response)
 }

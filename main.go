@@ -15,7 +15,8 @@ func main() {
 
 	router := gin.Default()
 
-	router.POST("/process/product", controller.ProcessProduct)
+	router.POST("/process/product", controller.InsertProductJSON)
+	router.POST("/process/sales", controller.InsertCSVFile)
 
 	router.Run(":8000")
 }
