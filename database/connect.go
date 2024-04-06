@@ -38,7 +38,7 @@ func InitializationDB() *gorm.DB {
 
 func Connection() {
 	DB = InitializationDB()
-	if err := DB.AutoMigrate(&model.Product{}, &model.Sales{}); err != nil {
+	if err := DB.AutoMigrate(&model.Product{}, &model.Sales{}, &model.Reports{}); err != nil {
 		log.Fatalf("Error migrating database schema: %v", err)
 	}
 }
