@@ -26,5 +26,3 @@ func ImportSalesToDatabase(csvRecords [][]string, mapProductID map[string]int) m
 	payload := fmt.Sprintf("Success insert %v rows of data into products table", len(csvRecords)-1)
 	return helpers.Response(payload, 200, "Inserting CSV File into Sales Table")
 }
-
-func CountSalesProduct() {}
