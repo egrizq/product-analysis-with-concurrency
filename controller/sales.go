@@ -1,9 +1,7 @@
 package controller
 
 import (
-	"product-store-management/database"
 	"product-store-management/helpers"
-	"product-store-management/model"
 	"product-store-management/service"
 
 	"github.com/gin-gonic/gin"
@@ -16,9 +14,8 @@ func ProcessSales(ctx *gin.Context) {
 		ctx.JSON(response.StatusCode, response)
 	}
 
-	var listProduct []model.ProductNameId
-	query := "SELECT id, name FROM products;"
-	if err := database.DB.Raw(query).Scan(&listProduct).Error; err != nil {
+	listProduct, err := service.GetProductNameAndID()
+	if err != nil {
 		response := helpers.Response("Error QUERY: {SELECT id, name FROM products;}", 500, err.Error())
 		ctx.JSON(response.StatusCode, response)
 	}
