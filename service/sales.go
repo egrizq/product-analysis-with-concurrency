@@ -9,50 +9,16 @@ import (
 	"sync"
 )
 
-func formatSalesRecord(mapProductID map[string]int, salesRecord []string) *model.Sales {
-	productId := mapProductID[salesRecord[0]]
-	qty, _ := strconv.Atoi(salesRecord[1])
-	date := helpers.ConvertDate(salesRecord[2])
-
-	sales := &model.Sales{
-		ProductId: productId,
-		QtySold:   qty,
-		Date:      date,
-	}
-
-	return sales
-}
-
-func ImportSalesToDatabase(csvRecords [][]string, mapProductID map[string]int) model.Response {
-	var salesList []*model.Sales
+func ImportSalesToDatabase(csvRecords [][]string) model.Response {
 	var wg sync.WaitGroup
-	var salesListMutex sync.Mutex
 
 	errorChannel := make(chan error)
 	batchSize := 5000
 
-	appendToSalesList := func(salesRecord []string) {
-		defer wg.Done()
-
-		sales := formatSalesRecord(mapProductID, salesRecord)
-		salesListMutex.Lock()
-		salesList = append(salesList, sales)
-		salesListMutex.Unlock()
+	salesList, err := insertSalesRecord(csvRecords, &wg)
+	if err != nil {
+		return helpers.Response("Error salesList", 404, err.Error())
 	}
-
-	for index, salesRecord := range csvRecords {
-		if index != 0 {
-			wg.Add(1)
-
-			go appendToSalesList(salesRecord)
-
-			if len(salesList)%batchSize == 0 {
-				wg.Wait()
-			}
-		}
-	}
-	wg.Wait()
-
 	totalSalesList := len(salesList)
 
 	for i := 0; i < totalSalesList; i += batchSize {
@@ -71,7 +37,6 @@ func ImportSalesToDatabase(csvRecords [][]string, mapProductID map[string]int) m
 			tx := database.DB.Begin()
 			if tx.Error != nil {
 				errorChannel <- tx.Error
-				return
 			}
 
 			if err := tx.Create(sales).Error; err != nil {
@@ -86,13 +51,13 @@ func ImportSalesToDatabase(csvRecords [][]string, mapProductID map[string]int) m
 			}
 		}(batch)
 	}
-	wg.Wait()
 
+	wg.Wait()
 	close(errorChannel)
 
 	for err := range errorChannel {
 		if err != nil {
-			return helpers.Response("Error channel", 200, err.Error())
+			return helpers.Response("Error channel", 500, err.Error())
 		}
 	}
 
@@ -109,4 +74,62 @@ func GetProductNameAndID() ([]model.ProductNameId, error) {
 	}
 
 	return listProduct, nil
+}
+
+func MapProductID() (map[string]int, error) {
+	listProductNameID, err := GetProductNameAndID()
+	if err != nil {
+		return map[string]int{}, err
+	}
+
+	// todo hashmap to build table relation with product.id from sales table
+	productID := make(map[string]int)
+	for _, product := range listProductNameID {
+		productID[product.Name] = product.Id
+	}
+
+	return productID, nil
+}
+
+func formatSalesRecord(productID map[string]int, salesRecord []string) *model.Sales {
+	id := productID[salesRecord[0]]
+	qty, _ := strconv.Atoi(salesRecord[1])
+	date := helpers.ConvertDate(salesRecord[2])
+
+	sales := &model.Sales{
+		ProductId: id,
+		QtySold:   qty,
+		Date:      date,
+	}
+
+	return sales
+}
+
+func insertSalesRecord(csvRecords [][]string, wg *sync.WaitGroup) ([]*model.Sales, error) {
+	var salesList []*model.Sales
+	var salesListMutex sync.Mutex
+
+	productID, err := MapProductID()
+	if err != nil {
+		return []*model.Sales{}, err
+	}
+
+	appendToSalesList := func(salesRecord []string) {
+		defer wg.Done()
+
+		sales := formatSalesRecord(productID, salesRecord)
+		salesListMutex.Lock()
+		salesList = append(salesList, sales)
+		salesListMutex.Unlock()
+	}
+
+	for index, salesRecord := range csvRecords {
+		if index != 0 {
+			wg.Add(1)
+			go appendToSalesList(salesRecord)
+		}
+	}
+	wg.Wait()
+
+	return salesList, nil
 }

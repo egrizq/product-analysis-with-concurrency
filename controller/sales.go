@@ -14,18 +14,6 @@ func ProcessSales(ctx *gin.Context) {
 		ctx.JSON(response.StatusCode, response)
 	}
 
-	listProduct, err := service.GetProductNameAndID()
-	if err != nil {
-		response := helpers.Response("Error QUERY: {SELECT id, name FROM products;}", 500, err.Error())
-		ctx.JSON(response.StatusCode, response)
-	}
-
-	// hashmap to build table relation with product.id from sales table
-	mapProductID := make(map[string]int)
-	for _, product := range listProduct {
-		mapProductID[product.Name] = product.Id
-	}
-
-	response := service.ImportSalesToDatabase(csvRecords, mapProductID)
+	response := service.ImportSalesToDatabase(csvRecords)
 	ctx.JSON(response.StatusCode, response)
 }
