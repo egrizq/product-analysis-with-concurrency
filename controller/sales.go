@@ -2,18 +2,15 @@ package controller
 
 import (
 	"product-store-management/helpers"
+	"product-store-management/model"
 	"product-store-management/service"
-
-	"github.com/gin-gonic/gin"
 )
 
-func ProcessSales(ctx *gin.Context) {
+func InsertProductCSV() model.Response {
 	csvRecords, err := helpers.ReadCSV("public/sales_data.csv")
 	if err != nil {
-		response := helpers.Response("Error read csv file", 500, err.Error())
-		ctx.JSON(response.StatusCode, response)
+		return helpers.Response("Error read csv file", 500, err.Error())
 	}
 
-	response := service.ImportSalesToDatabase(csvRecords)
-	ctx.JSON(response.StatusCode, response)
+	return service.ImportSalesToDatabase(csvRecords)
 }
