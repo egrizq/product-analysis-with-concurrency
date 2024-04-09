@@ -34,6 +34,10 @@ Analysis and process 10000+ rows of data with goroutine
     ```bash
     make dev
     ```
+    or alternatively 
+    ```bash
+    go run main.go
+    ```
 
 5. The program will run on [http://localhost:8000](http://localhost:8000).
 
