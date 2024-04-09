@@ -13,11 +13,13 @@ func ProcessData(ctx *gin.Context) {
 	responseProduct := controller.InsertProductJSON()
 	if responseProduct.StatusCode != 200 {
 		ctx.JSON(responseProduct.StatusCode, responseProduct)
+		return
 	}
 
 	responseSales := controller.InsertProductCSV()
 	if responseProduct.StatusCode != 200 {
 		ctx.JSON(responseSales.StatusCode, responseSales)
+		return
 	}
 
 	response = append(response, responseProduct, responseSales)

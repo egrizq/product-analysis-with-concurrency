@@ -65,12 +65,12 @@ func ImportSalesToDatabase(csvRecords [][]string) model.Response {
 	return helpers.Response(payload, 200, "Inserting CSV File into Sales Table")
 }
 
-func GetProductNameAndID() ([]model.ProductNameId, error) {
-	var listProduct []model.ProductNameId
+func GetProductNameAndID() ([]model.Product, error) {
+	var listProduct []model.Product
 
-	query := "SELECT id, name FROM products;"
-	if err := database.DB.Raw(query).Scan(&listProduct).Error; err != nil {
-		return []model.ProductNameId{}, err
+	// query := "SELECT id, name FROM products;"
+	if err := database.DB.Select("id, name").Find(&listProduct).Error; err != nil {
+		return []model.Product{}, err
 	}
 
 	return listProduct, nil
@@ -109,6 +109,8 @@ func insertSalesRecord(csvRecords [][]string, wg *sync.WaitGroup) ([]*model.Sale
 	var salesList []*model.Sales
 	var salesListMutex sync.Mutex
 
+	batch := 5000
+
 	productID, err := MapProductID()
 	if err != nil {
 		return []*model.Sales{}, err
@@ -127,6 +129,10 @@ func insertSalesRecord(csvRecords [][]string, wg *sync.WaitGroup) ([]*model.Sale
 		if index != 0 {
 			wg.Add(1)
 			go appendToSalesList(salesRecord)
+
+			if index%batch == 0 {
+				wg.Wait()
+			}
 		}
 	}
 	wg.Wait()

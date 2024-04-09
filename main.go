@@ -3,6 +3,7 @@ package main
 import (
 	"product-store-management/controller"
 	"product-store-management/database"
+	"product-store-management/route"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -15,8 +16,8 @@ func main() {
 
 	router := gin.Default()
 
-	router.POST("/process/product", controller.InsertProductJSON)
-	router.POST("/process/sales", controller.ProcessSales)
+	router.POST("/process/insert", route.ProcessData)
+	router.GET("/process/reports", controller.ProcessReports)
 
 	router.Run(":8000")
 }
