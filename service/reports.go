@@ -1,29 +1,18 @@
 package service
 
 import (
+	"fmt"
 	"log"
-	"product-store-management/database"
+	"product-store-management/helpers"
 	"product-store-management/model"
 
 	"gorm.io/gorm"
 )
 
-/*
-	select product -> id & stock
-	store product
-
-	select sales -> product_id & SUM(qty_sold)
-	groupby sales -> product_id
-	store sales
-
-	calculate product stock - qty_sold
-	where product id = sales product id
-	update product
-
-*/
-
 type Query interface {
-	GetProducts() []model.Product
+	ReportsRequirement() []model.Reports
+	InsertReports(reports []model.Reports) model.Response
+	UpdateProducts() model.Response
 }
 
 func Reports(db *gorm.DB) Query {
@@ -36,8 +25,7 @@ type Begin struct {
 	db *gorm.DB
 }
 
-func SalesReports() []model.Reports {
-
+func (begin *Begin) ReportsRequirement() []model.Reports {
 	var salesReports []model.Reports
 
 	query := `
@@ -55,21 +43,42 @@ func SalesReports() []model.Reports {
 		GROUP BY sales.product_id, products.id
 		ORDER BY products.id ASC;		
 	`
-	err := database.DB.Raw(query).Scan(&salesReports).Error
-
-	if err != nil {
+	if err := begin.db.Raw(query).Scan(&salesReports).Error; err != nil {
 		log.Fatal(err.Error())
 	}
 
 	return salesReports
 }
 
-func (begin *Begin) GetProducts() []model.Product {
-	var products []model.Product
-
-	if err := begin.db.Find(&products).Error; err != nil {
-		log.Fatal(err)
+func (begin *Begin) InsertReports(reports []model.Reports) model.Response {
+	if err := begin.db.Create(&reports).Error; err != nil {
+		return helpers.Response("Error inserting reports to database", 500, err.Error())
 	}
 
-	return products
+	updateProducts := begin.UpdateProducts()
+	if updateProducts.StatusCode == 500 {
+		return updateProducts
+	}
+
+	payload := fmt.Sprintf("Success analysis and processing %v rows of data into reports table", len(reports))
+	return helpers.Response(payload, 200, "Reports has been created")
+}
+
+func (begin *Begin) UpdateProducts() model.Response {
+	query := `
+		UPDATE products
+		SET stock = stock - sales_summary.total_sold
+		FROM (
+			SELECT product_id, SUM(qty_sold) AS total_sold
+			FROM sales
+			GROUP BY product_id
+		) as sales_summary
+		WHERE id = sales_summary.product_id;
+	`
+
+	if err := begin.db.Exec(query).Error; err != nil {
+		return helpers.Response("Error inserting update product to database", 500, err.Error())
+	}
+
+	return model.Response{}
 }

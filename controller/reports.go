@@ -1,15 +1,16 @@
 package controller
 
 import (
+	"product-store-management/database"
 	"product-store-management/service"
 
 	"github.com/gin-gonic/gin"
 )
 
 func ProcessReports(ctx *gin.Context) {
-	// reports := service.Reports(database.DB)
+	start := service.Reports(database.DB)
+	reports := start.ReportsRequirement()
+	response := start.InsertReports(reports)
 
-	sales := service.SalesReports()
-
-	ctx.JSON(200, sales)
+	ctx.JSON(200, response)
 }
