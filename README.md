@@ -19,19 +19,13 @@ The project is designed to efficiently process and store 15001 rows of CSV and 8
     git clone https://github.com/egrizq/product-analysis-with-concurrency.git
     ```
 
-2. Install all package:
-
-    ```bash
-    go mod tidy
-    ```
-
-3. Copy environment for database:
+2. Copy environment for database:
 
     ```bash
     cp .env.example .env
     ```
 
-4. Run the application:
+3. Run the application:
 
     ```bash
     make dev
@@ -41,7 +35,7 @@ The project is designed to efficiently process and store 15001 rows of CSV and 8
     go run main.go
     ```
 
-5. The program will run on [http://localhost:8000](http://localhost:8000).
+4. The program will run on [http://localhost:8000](http://localhost:8000).
 
 ## API ENDPOINT
 
