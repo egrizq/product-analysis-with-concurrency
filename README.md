@@ -46,3 +46,4 @@ Analysis and process 10000+ rows of data with goroutine
 | Method | Endpoint | Description |
 |----------|----------|----------|
 | POST | localhost:8000/process/insert | Import JSON & CSV file |
+| GET | localhost:8000/process/reports | Process & analysis |
