@@ -16,7 +16,7 @@ func main() {
 
 	router := gin.Default()
 
-	router.POST("/process/insert", route.ProcessData)
+	router.POST("/process/insert", route.InsertData)
 	router.GET("/process/reports", controller.ProcessReports)
 
 	router.Run(":8000")

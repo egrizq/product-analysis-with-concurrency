@@ -9,13 +9,13 @@ import (
 	"gorm.io/gorm"
 )
 
-type Query interface {
-	ReportsRequirement() []model.Reports
-	InsertReports(reports []model.Reports) model.Response
+type Process interface {
+	Analysis() []model.Reports
+	Insert(reports []model.Reports) model.Response
 	UpdateProducts() model.Response
 }
 
-func Reports(db *gorm.DB) Query {
+func ReportsInit(db *gorm.DB) Process {
 	return &Begin{
 		db: db,
 	}
@@ -25,7 +25,7 @@ type Begin struct {
 	db *gorm.DB
 }
 
-func (begin *Begin) ReportsRequirement() []model.Reports {
+func (begin *Begin) Analysis() []model.Reports {
 	var salesReports []model.Reports
 
 	query := `
@@ -50,7 +50,7 @@ func (begin *Begin) ReportsRequirement() []model.Reports {
 	return salesReports
 }
 
-func (begin *Begin) InsertReports(reports []model.Reports) model.Response {
+func (begin *Begin) Insert(reports []model.Reports) model.Response {
 	if err := begin.db.Create(&reports).Error; err != nil {
 		return helpers.Response("Error inserting reports to database", 500, err.Error())
 	}
@@ -77,8 +77,8 @@ func (begin *Begin) UpdateProducts() model.Response {
 	`
 
 	if err := begin.db.Exec(query).Error; err != nil {
-		return helpers.Response("Error inserting update product to database", 500, err.Error())
+		return helpers.Response("Error update product to database", 500, err.Error())
 	}
 
-	return model.Response{}
+	return model.Response{} // return nil if it the query was ok
 }

@@ -68,7 +68,6 @@ func ImportSalesToDatabase(csvRecords [][]string) model.Response {
 func GetProductNameAndID() ([]model.Product, error) {
 	var listProduct []model.Product
 
-	// query := "SELECT id, name FROM products;"
 	if err := database.DB.Select("id, name").Find(&listProduct).Error; err != nil {
 		return []model.Product{}, err
 	}

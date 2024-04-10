@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func ProcessData(ctx *gin.Context) {
+func InsertData(ctx *gin.Context) {
 	var response []model.Response
 
 	responseProduct := controller.InsertProductJSON()

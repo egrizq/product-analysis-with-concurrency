@@ -8,9 +8,9 @@ import (
 )
 
 func ProcessReports(ctx *gin.Context) {
-	start := service.Reports(database.DB)
-	reports := start.ReportsRequirement()
-	response := start.InsertReports(reports)
+	process := service.ReportsInit(database.DB)
+	reports := process.Analysis()
+	response := process.Insert(reports)
 
-	ctx.JSON(200, response)
+	ctx.JSON(response.StatusCode, response)
 }
