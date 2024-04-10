@@ -28,41 +28,45 @@ func ImportSalesToDatabase(csvRecords [][]string) model.Response {
 		}
 
 		wg.Add(1)
-		batch := make([]*model.Sales, end-i)
-		copy(batch, salesList[i:end])
+		salesBatch := make([]*model.Sales, end-i)
+		copy(salesBatch, salesList[i:end])
 
-		go func(sales []*model.Sales) {
+		go func(salesBatch []*model.Sales) {
 			defer wg.Done()
 
-			tx := database.DB.Begin()
-			if tx.Error != nil {
-				errorChannel <- tx.Error
-			}
-
-			if err := tx.Create(sales).Error; err != nil {
-				tx.Rollback()
+			if err := SaveBatch(salesBatch); err != nil {
 				errorChannel <- err
-				return
 			}
-
-			if err := tx.Commit().Error; err != nil {
-				errorChannel <- err
-				return
-			}
-		}(batch)
+		}(salesBatch)
 	}
 
 	wg.Wait()
 	close(errorChannel)
 
-	for err := range errorChannel {
-		if err != nil {
-			return helpers.Response("Error channel", 500, err.Error())
-		}
+	if len(errorChannel) > 0 {
+		return helpers.Response("Error occurred, transaction rolled back", 500, "Error occurred, transaction rolled back")
 	}
 
 	payload := fmt.Sprintf("Success insert %v rows of data into products table", totalSalesList)
 	return helpers.Response(payload, 200, "Inserting CSV File into Sales Table")
+}
+
+func SaveBatch(salesBatch []*model.Sales) error {
+	tx := database.DB.Begin()
+	if tx.Error != nil {
+		return tx.Error
+	}
+
+	if err := tx.Create(salesBatch).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func GetProductNameAndID() ([]model.Product, error) {
