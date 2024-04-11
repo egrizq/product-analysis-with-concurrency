@@ -16,8 +16,8 @@ func InsertData(ctx *gin.Context) {
 		return
 	}
 
-	responseSales := controller.InsertProductCSV()
-	if responseProduct.StatusCode != 200 {
+	responseSales := controller.InsertSalesCSV()
+	if responseSales.StatusCode != 200 {
 		ctx.JSON(responseSales.StatusCode, responseSales)
 		return
 	}

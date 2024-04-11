@@ -12,19 +12,20 @@ import (
 func ImportSalesToDatabase(csvRecords [][]string) model.Response {
 	var wg sync.WaitGroup
 
-	errorChannel := make(chan error)
-	batchSize := 5000
-
 	salesList, err := insertSalesRecord(csvRecords, &wg)
 	if err != nil {
 		return helpers.Response("Error salesList", 404, err.Error())
 	}
-	totalSalesList := len(salesList)
 
-	for i := 0; i < totalSalesList; i += batchSize {
+	rangeSalesList := len(salesList)
+	batchSize := 5000
+	errorChannel := make(chan error, rangeSalesList/batchSize+1)
+
+	// todo looping
+	for i := 0; i < rangeSalesList; i += batchSize {
 		end := i + batchSize
-		if end > totalSalesList {
-			end = totalSalesList
+		if end > rangeSalesList {
+			end = rangeSalesList
 		}
 
 		wg.Add(1)
@@ -36,18 +37,22 @@ func ImportSalesToDatabase(csvRecords [][]string) model.Response {
 
 			if err := SaveBatch(salesBatch); err != nil {
 				errorChannel <- err
+				return
 			}
 		}(salesBatch)
-	}
 
+	}
 	wg.Wait()
 	close(errorChannel)
 
-	if len(errorChannel) > 0 {
-		return helpers.Response("Error occurred, transaction rolled back", 500, "Error occurred, transaction rolled back")
+	var rollbackErr error
+	for err := range errorChannel {
+		if err != nil {
+			return helpers.Response("Error occurred during processing, transaction rolled back", 500, rollbackErr.Error())
+		}
 	}
 
-	payload := fmt.Sprintf("Success insert %v rows of data into products table", totalSalesList)
+	payload := fmt.Sprintf("Success insert %v rows of data into products table", rangeSalesList)
 	return helpers.Response(payload, 200, "Inserting CSV File into Sales Table")
 }
 

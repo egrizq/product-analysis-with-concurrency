@@ -6,7 +6,7 @@ import (
 	"product-store-management/service"
 )
 
-func InsertProductCSV() model.Response {
+func InsertSalesCSV() model.Response {
 	csvRecords, err := helpers.ReadCSV("public/sales_data.csv")
 	if err != nil {
 		return helpers.Response("Error read csv file", 500, err.Error())
