@@ -6,10 +6,7 @@ import (
 	"product-store-management/route"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
-
-var Database *gorm.DB
 
 func main() {
 	database.Connection()
@@ -17,7 +14,7 @@ func main() {
 	router := gin.Default()
 
 	router.POST("/process/insert", route.InsertData)
-	router.GET("/process/reports", controller.ProcessReports)
+	router.POST("/process/reports", controller.ProcessReports)
 
 	router.Run(":8000")
 }

@@ -45,10 +45,9 @@ func ImportSalesToDatabase(csvRecords [][]string) model.Response {
 	wg.Wait()
 	close(errorChannel)
 
-	var rollbackErr error
 	for err := range errorChannel {
 		if err != nil {
-			return helpers.Response("Error occurred during processing, transaction rolled back", 500, rollbackErr.Error())
+			return helpers.Response("Error occurred during processing", 500, err.Error())
 		}
 	}
 

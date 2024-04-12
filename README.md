@@ -42,4 +42,4 @@ The project is designed to efficiently process and store 15001 rows of CSV and 8
 | Method | Endpoint | Description |
 |----------|----------|----------|
 | POST | localhost:8000/process/insert | Import JSON & CSV file |
-| GET | localhost:8000/process/reports | Process & analysis |
+| POST | localhost:8000/process/reports | Process & analysis |
