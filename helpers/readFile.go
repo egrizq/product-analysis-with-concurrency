@@ -22,13 +22,13 @@ func ReadCSV(file string) ([][]string, error) {
 func ReadJSON(file string) ([]model.Product, error) {
 	fileJson, err := os.ReadFile(file)
 	if err != nil {
-		return []model.Product{}, err
+		return nil, err
 	}
 
 	var listProduct []model.Product
 	err = json.Unmarshal(fileJson, &listProduct)
 	if err != nil {
-		return []model.Product{}, err
+		return nil, err
 	}
 
 	return listProduct, nil

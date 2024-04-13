@@ -2,7 +2,6 @@ package service
 
 import (
 	"fmt"
-	"log"
 	"product-store-management/helpers"
 	"product-store-management/model"
 
@@ -10,8 +9,8 @@ import (
 )
 
 type Process interface {
-	Analysis() []model.Reports
-	Insert(reports []model.Reports) model.Response
+	Analysis() ([]model.Reports, error)
+	Insert() model.Response
 	UpdateProducts() model.Response
 }
 
@@ -25,7 +24,7 @@ type Begin struct {
 	db *gorm.DB
 }
 
-func (begin *Begin) Analysis() []model.Reports {
+func (begin *Begin) Analysis() ([]model.Reports, error) {
 	var salesReports []model.Reports
 
 	query := `
@@ -44,13 +43,18 @@ func (begin *Begin) Analysis() []model.Reports {
 		ORDER BY products.id ASC;		
 	`
 	if err := begin.db.Raw(query).Scan(&salesReports).Error; err != nil {
-		log.Fatal(err.Error())
+		return nil, err
 	}
 
-	return salesReports
+	return salesReports, nil
 }
 
-func (begin *Begin) Insert(reports []model.Reports) model.Response {
+func (begin *Begin) Insert() model.Response {
+	reports, err := begin.Analysis()
+	if err != nil {
+		return helpers.Response("Error aggregarating query", 500, err.Error())
+	}
+
 	if err := begin.db.Create(&reports).Error; err != nil {
 		return helpers.Response("Error inserting reports to database", 500, err.Error())
 	}

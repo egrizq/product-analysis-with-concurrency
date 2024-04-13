@@ -56,17 +56,7 @@ func ImportSalesToDatabase(csvRecords [][]string) model.Response {
 }
 
 func SaveBatch(salesBatch []*model.Sales) error {
-	tx := database.DB.Begin()
-	if tx.Error != nil {
-		return tx.Error
-	}
-
-	if err := tx.Create(salesBatch).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
-
-	if err := tx.Commit().Error; err != nil {
+	if err := database.DB.Create(salesBatch).Error; err != nil {
 		return err
 	}
 
@@ -77,7 +67,7 @@ func GetProductNameAndID() ([]model.Product, error) {
 	var listProduct []model.Product
 
 	if err := database.DB.Select("id, name").Find(&listProduct).Error; err != nil {
-		return []model.Product{}, err
+		return nil, err
 	}
 
 	return listProduct, nil
@@ -86,7 +76,7 @@ func GetProductNameAndID() ([]model.Product, error) {
 func MapProductID() (map[string]int, error) {
 	listProductNameID, err := GetProductNameAndID()
 	if err != nil {
-		return map[string]int{}, err
+		return nil, err
 	}
 
 	// todo hashmap to build table relation with product.id from sales table
@@ -120,7 +110,7 @@ func insertSalesRecord(csvRecords [][]string, wg *sync.WaitGroup) ([]*model.Sale
 
 	productID, err := MapProductID()
 	if err != nil {
-		return []*model.Sales{}, err
+		return nil, err
 	}
 
 	appendToSalesList := func(salesRecord []string) {
