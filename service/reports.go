@@ -24,6 +24,25 @@ type Begin struct {
 	db *gorm.DB
 }
 
+func (begin *Begin) Insert() model.Response {
+	reports, err := begin.Analysis()
+	if err != nil {
+		return helpers.Response("Error aggregarating query", 500, err.Error())
+	}
+
+	if err := begin.db.Create(reports).Error; err != nil {
+		return helpers.Response("Error inserting reports to database", 500, err.Error())
+	}
+
+	updateProducts := begin.UpdateProducts()
+	if updateProducts.StatusCode == 500 {
+		return updateProducts
+	}
+
+	payload := fmt.Sprintf("Success analysis and processing %v rows of data into reports table", len(reports))
+	return helpers.Response(payload, 200, "Reports has been created")
+}
+
 func (begin *Begin) Analysis() ([]model.Reports, error) {
 	var salesReports []model.Reports
 
@@ -47,25 +66,6 @@ func (begin *Begin) Analysis() ([]model.Reports, error) {
 	}
 
 	return salesReports, nil
-}
-
-func (begin *Begin) Insert() model.Response {
-	reports, err := begin.Analysis()
-	if err != nil {
-		return helpers.Response("Error aggregarating query", 500, err.Error())
-	}
-
-	if err := begin.db.Create(&reports).Error; err != nil {
-		return helpers.Response("Error inserting reports to database", 500, err.Error())
-	}
-
-	updateProducts := begin.UpdateProducts()
-	if updateProducts.StatusCode == 500 {
-		return updateProducts
-	}
-
-	payload := fmt.Sprintf("Success analysis and processing %v rows of data into reports table", len(reports))
-	return helpers.Response(payload, 200, "Reports has been created")
 }
 
 func (begin *Begin) UpdateProducts() model.Response {

@@ -44,15 +44,13 @@ func ImportProductToDatabase(listProduct []model.Product) model.Response {
 
 	batchSize := 500
 	errorChannel := make(chan error)
-
 	newListProduct := removeDuplicate(batchSize, listProduct, &wg)
-
 	wg.Add(1)
 
 	go func(product []model.Product) {
 		defer wg.Done()
 
-		if err := database.DB.Create(&product).Error; err != nil {
+		if err := saveProduct(product); err != nil {
 			errorChannel <- err
 		}
 	}(newListProduct)
@@ -70,4 +68,22 @@ func ImportProductToDatabase(listProduct []model.Product) model.Response {
 	response := helpers.Response(payload, 200, "Import json data to database is success")
 
 	return response
+}
+
+func saveProduct(product []model.Product) error {
+	tx := database.DB.Begin()
+	if tx.Error != nil {
+		return tx.Error
+	}
+
+	if err := tx.Create(product).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return err
+	}
+
+	return nil
 }

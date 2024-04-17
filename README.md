@@ -2,7 +2,7 @@
 
 ## Description
 
-The project is designed to efficiently process and store 15001 rows of CSV and 817 JSON file into PostgreSQL database utilizing the GORM library. It leverages goroutines for concurrent processing, waitgroups for synchronization, and mutexes to handle race condition, aiming for execution times (< 1 second) to streamline data loading tasks. 
+The project is designed to efficiently process and store 15001 rows of CSV and 817 JSON file into PostgreSQL database utilizing the GORM library. It leverages goroutines for concurrent processing, waitgroups for synchronization, and mutexes to handle race condition, aiming for execution times (< 1 second) to streamline data loading tasks.
 
 ## Tech Stack
 

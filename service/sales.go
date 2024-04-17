@@ -35,7 +35,7 @@ func ImportSalesToDatabase(csvRecords [][]string) model.Response {
 		go func(salesBatch []*model.Sales) {
 			defer wg.Done()
 
-			if err := SaveBatch(salesBatch); err != nil {
+			if err := SaveSales(salesBatch); err != nil {
 				errorChannel <- err
 				return
 			}
@@ -55,8 +55,18 @@ func ImportSalesToDatabase(csvRecords [][]string) model.Response {
 	return helpers.Response(payload, 200, "Inserting CSV File into Sales Table")
 }
 
-func SaveBatch(salesBatch []*model.Sales) error {
-	if err := database.DB.Create(salesBatch).Error; err != nil {
+func SaveSales(salesBatch []*model.Sales) error {
+	tx := database.DB.Begin()
+	if tx.Error != nil {
+		return tx.Error
+	}
+
+	if err := tx.Create(salesBatch).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if err := tx.Commit().Error; err != nil {
 		return err
 	}
 
